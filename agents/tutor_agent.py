@@ -7,6 +7,7 @@ class TutorAgent(Agent):
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
         self.ml_model = None  # modèle IA
+        self.interventions = 0  #  COMPTEUR
 
     def predict_difficulty(self, student):
         """
@@ -30,15 +31,15 @@ class TutorAgent(Agent):
             "engagement": engagement
         }])
 
-        prediction = self.ml_model.predict(X)
+        proba = self.ml_model.predict_proba(X)[0][1]
 
-        return prediction[0]
+        return proba
 
     def intervene(self, student):
         """
         Intervention intelligente du tuteur
         """
-
+        self.interventions += 1  #  COMPTEUR
         student.competence += 0.1
         student.motivation += 0.1
         student.satisfaction += 0.1
@@ -67,12 +68,15 @@ class TutorAgent(Agent):
         #  Parcourir les étudiants
         for student in self.model.students:
 
-            #  IA ou fallback
             if self.ml_model is not None:
-                is_difficult = self.predict_difficulty(student)
-            else:
-                is_difficult = student.competence * student.motivation < 0.5
+               p_drop = self.predict_difficulty(student)
 
-            #  Intervention si nécessaire
-            if is_difficult:
-                self.intervene(student)
+        #  décision intelligente
+               if p_drop > 0.7:
+                 self.intervene(student)
+
+            else:
+        # fallback
+               if student.competence * student.motivation < 0.5:
+                  self.intervene(student)
+
