@@ -57,5 +57,6 @@ class SimulationModel(Model):
         self.collaboration_history.append(collab)
         self.engagement_history.append(engage)
         self.equity_history.append(equity)
-
+        if self.use_tutor:
+         print("Interventions tuteur :", self.tutor.interventions)
         print("Perf:", avg_perf, "| Collab:", collab, "| Engage:", engage)
