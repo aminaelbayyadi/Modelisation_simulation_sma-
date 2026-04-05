@@ -1,6 +1,6 @@
 from mesa import Model
 from mesa.time import RandomActivation
-
+from analysis.metrics import calculate_std_performance #
 from agents.student_agent import StudentAgent
 from agents.tutor_agent import TutorAgent
 from agents.teacher_agent import TeacherAgent
@@ -28,7 +28,7 @@ class SimulationModel(Model):
         self.collaboration_history = []
         self.engagement_history = []
         self.equity_history = []
-
+        self.std_history = []
         # création agents
         for i in range(self.num_students):
             student = StudentAgent(i, self)
@@ -52,11 +52,14 @@ class SimulationModel(Model):
         collab = calculate_collaboration(self.students)
         engage = calculate_engagement(self.students)
         equity = calculate_equity(self.students)
+        std_perf = calculate_std_performance(self.students)
 
         self.performance_history.append(avg_perf)
         self.collaboration_history.append(collab)
         self.engagement_history.append(engage)
         self.equity_history.append(equity)
+        self.std_history.append(std_perf)
+        print("Perf:", avg_perf, "| Collab:", collab, "| Engage:", engage)
         if self.use_tutor:
          print("Interventions tuteur :", self.tutor.interventions)
-        print("Perf:", avg_perf, "| Collab:", collab, "| Engage:", engage)
+         print("Std performance :", std_perf)
