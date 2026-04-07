@@ -1,6 +1,6 @@
 from mesa import Model
 from mesa.time import RandomActivation
-from analysis.metrics import calculate_std_performance #
+from analysis.metrics import calculate_std_performance 
 from agents.student_agent import StudentAgent
 from agents.tutor_agent import TutorAgent
 from agents.teacher_agent import TeacherAgent

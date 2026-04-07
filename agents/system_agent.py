@@ -1,6 +1,5 @@
 from mesa import Agent
 import random
-
 from environment.groups import Group
 from environment.tasks import Task
 
