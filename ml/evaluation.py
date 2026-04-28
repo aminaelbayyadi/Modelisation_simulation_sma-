@@ -1,23 +1,25 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-from sklearn.ensemble import RandomForestClassifier
+import joblib
 
 def evaluate_model():
 
+    # ==============================
     # 1. Charger données
+    # ==============================
     df = pd.read_csv("data/results.csv")
-
-    # 2. Nettoyage
     df = df.dropna()
 
-    # 3. Même logique que ml_model.py (IMPORTANT)
-    df["label"] = df["performance"] < 0.7
+    #  nettoyer
+    df = df[df["performance"] > 0]
 
-    # 4. Feature engineering
+    #  feature
     df["engagement"] = df["interactions"] / (df["charge"] + 1)
 
-    # 5. Variables
+    # ==============================
+    # 2. Variables
+    # ==============================
     X = df[[
         "tutor",
         "smart_group",
@@ -28,35 +30,44 @@ def evaluate_model():
         "engagement"
     ]]
 
-    y = df["label"]
-
-    # 6. Split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
-
-    # 7. Modèle
-    model = RandomForestClassifier(
-        n_estimators=100,
-        max_depth=5,
-        random_state=42
-    )
-
-    model.fit(X_train, y_train)
-
-    # 8. Prédictions
-    y_pred = model.predict(X_test)
-
-    # 9. Métriques
-    acc = accuracy_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred)
-    cm = confusion_matrix(y_test, y_pred)
-
-    print(" Accuracy :", acc)
-    print(" F1-score :", f1)
-
-    print("\n Matrice de confusion :")
-    print(cm)
+    y = df["p_drop"]  
 
     print("\n Répartition des classes :")
-    print(df["label"].value_counts())
+    print(y.value_counts())
+
+    # sécurité
+    if y.value_counts().min() < 2:
+        print(" Dataset trop petit ou déséquilibré")
+        return
+
+    # ==============================
+    # 3. Split
+    # ==============================
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=0.3,
+        random_state=42,
+        stratify=y
+    )
+
+    # ==============================
+    # 4. Charger modèle
+    # ==============================
+    model = joblib.load("ml/model.pkl")
+
+    # ==============================
+    # 5. Prédiction
+    # ==============================
+    y_pred = model.predict(X_test)
+
+    # ==============================
+    # 6. Métriques
+    # ==============================
+    acc = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+
+    print("\n✔ Accuracy :", round(acc, 3))
+    print("✔ F1-score :", round(f1, 3))
+
+    print("\n Matrice de confusion :")
+    print(confusion_matrix(y_test, y_pred))

@@ -1,24 +1,51 @@
 import pandas as pd
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
+import joblib
+
 
 def train_model():
 
-    # 1. Charger les données
+    # ==============================
+    # 1. Charger données
+    # ==============================
     df = pd.read_csv("data/results.csv")
-
-    # 2. Nettoyage
     df = df.dropna()
 
-    # 3. Définir la cible (étudiant en difficulté)
-    df["p_drop"] = df["performance"] < 0.7
+    #  nettoyer
+    df = df[df["performance"] > 0]
 
-    # 4. Feature engineering 
+    if len(df) < 50:
+        print(" Pas assez de données")
+        return None
+
+    # ==============================
+    # 2. Feature engineering
+    # ==============================
     df["engagement"] = df["interactions"] / (df["charge"] + 1)
 
-    # 5. Variables d'entrée
-    X = df[[
+    #  bruit réaliste (léger)
+    df["competence"] += np.random.normal(0, 0.03, len(df))
+    df["motivation"] += np.random.normal(0, 0.03, len(df))
+
+    # ==============================
+    # 3. TARGET (CORRECT)
+    # ==============================
+    y = df["p_drop"]  
+
+    print("\n Répartition classes :")
+    print(y.value_counts())
+
+    if y.nunique() < 2:
+        print(" Dataset déséquilibré")
+        return None
+
+    # ==============================
+    # 4. Features
+    # ==============================
+    features = [
         "tutor",
         "smart_group",
         "competence",
@@ -26,28 +53,59 @@ def train_model():
         "interactions",
         "charge",
         "engagement"
-    ]]
+    ]
 
-    y = df["p_drop"]
+    for col in features:
+        if col not in df.columns:
+            print(f" Colonne manquante : {col}")
+            return None
 
-    # 6. Split train/test (pour validation interne)
+    X = df[features]
+
+    # ==============================
+    # 5. Split
+    # ==============================
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    # 7. Modèle optimisé
-    model = RandomForestClassifier(
-        n_estimators=100,
-        max_depth=5,
+        X,
+        y,
+        test_size=0.2,
+        stratify=y,
         random_state=42
     )
 
-    # 8. Entraînement
+    # ==============================
+    # 6. Modèle
+    # ==============================
+    model = RandomForestClassifier(
+        n_estimators=120,
+        max_depth=6,
+        class_weight="balanced",
+        random_state=42
+    )
+
+    # ==============================
+    # 7. Entraînement
+    # ==============================
     model.fit(X_train, y_train)
 
-    # 9. Évaluation rapide (debug)
+    # ==============================
+    # 8. Évaluation
+    # ==============================
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
-    print(" Accuracy (train_model) :", accuracy)
+
+    acc = accuracy_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+
+    print("\n✔ Accuracy :", round(acc, 3))
+    print("✔ F1-score :", round(f1, 3))
+
+    print("\n Matrice de confusion :")
+    print(confusion_matrix(y_test, y_pred))
+
+    # ==============================
+    # 9. Sauvegarde
+    # ==============================
+    joblib.dump(model, "ml/model.pkl")
+    print(" Modèle sauvegardé")
 
     return model

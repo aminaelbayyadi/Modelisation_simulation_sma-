@@ -1,72 +1,101 @@
 from mesa import Agent
-import random
 from environment.groups import Group
 from environment.tasks import Task
+from ml.kmeans_model import cluster_students
 
 
 class SystemAgent(Agent):
 
     def __init__(self, unique_id, model):
         super().__init__(unique_id, model)
-
         self.groups = []
 
+    # ==============================
+    # FORMATION DES GROUPES
+    # ==============================
     def form_groups(self):
         students = self.model.students.copy()
-
         self.groups = []
         group_size = 3
 
         if self.model.smart_grouping:
-            #  GROUPES INTELLIGENTS
 
-            sorted_students = sorted(students, key=lambda s: s.competence)
+            labels = cluster_students(students)
 
-            while len(sorted_students) >= group_size:
-                group_members = [
-                    sorted_students.pop(0),  # faible
-                    sorted_students.pop(len(sorted_students)//2),  # moyen
-                    sorted_students.pop(-1)  # fort
-                ]
+            clusters = {}
+            for student, label in zip(students, labels):
+                clusters.setdefault(label, []).append(student)
 
-                group = Group(group_members)
-                self.groups.append(group)
+            # mélanger tous les étudiants
+            mixed = []
+            for c in clusters.values():
+                mixed.extend(c)
+
+            self.random.shuffle(mixed)
+
+            for i in range(0, len(mixed), group_size):
+                self.groups.append(Group(mixed[i:i+group_size]))
 
         else:
-            # groupes aléatoires
-            random.shuffle(students)
+            self.random.shuffle(students)
 
             for i in range(0, len(students), group_size):
-                group_members = students[i:i + group_size]
-                group = Group(group_members)
-                self.groups.append(group)
+                self.groups.append(Group(students[i:i+group_size]))
 
+    # ==============================
+    # ATTRIBUTION DES TÂCHES
+    # ==============================
     def assign_tasks(self):
-        difficulties = ["facile", "moyenne", "difficile"]
 
         for group in self.groups:
-            difficulty = random.choice(difficulties)
+
+            avg_comp = sum(s.competence for s in group.members) / len(group.members)
+
+            if avg_comp < 0.4:
+                difficulty = "facile"
+
+            elif avg_comp < 0.7:
+                difficulty = "moyenne"
+
+            else:
+                #  parfois difficile (pas toujours)
+                if self.random.random() < 0.3:
+                    difficulty = "difficile"
+                else:
+                    difficulty = "moyenne"
+
             task = Task(difficulty)
             group.assign_task(task)
 
+    # ==============================
+    # EXÉCUTION
+    # ==============================
     def execute_groups(self):
         for group in self.groups:
-            results = group.work()
-            # print(results)
+            group.work()
 
+    # ==============================
+    # MÉTRIQUES
+    # ==============================
     def calculate_metrics(self):
-        performances = []
 
-        for student in self.model.students:
-            perf = student.competence * student.motivation
-            performances.append(perf)
+        performances = [
+            s.competence * s.motivation
+            for s in self.model.students
+        ]
 
         if performances:
             avg = sum(performances) / len(performances)
             print("Performance moyenne :", avg)
 
+    # ==============================
+    # STEP
+    # ==============================
     def step(self):
+
+        #  IMPORTANT : groupes à chaque tour
         self.form_groups()
+
         self.assign_tasks()
         self.execute_groups()
         self.calculate_metrics()

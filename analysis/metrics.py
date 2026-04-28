@@ -35,5 +35,6 @@ def calculate_completion_rate(groups):
                 success += 1
 
     return success / total if total > 0 else 0
+
 def calculate_interventions(tutor):
     return tutor.interventions
