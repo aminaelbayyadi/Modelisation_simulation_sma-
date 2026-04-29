@@ -6,7 +6,7 @@ class Task:
 
     def get_threshold(self):
 
-        # 🔥 SEUILS RÉALISTES
+        #  SEUILS RÉALISTES
         if self.difficulty == "facile":
             return 0.3
 

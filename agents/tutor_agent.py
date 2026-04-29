@@ -59,7 +59,7 @@ class TutorAgent(Agent):
 
         for student in self.model.students:
 
-            # 🔥 NE PAS BLOQUER LES BONS ÉTUDIANTS (important)
+            #  NE PAS BLOQUER LES BONS ÉTUDIANTS (important)
             # (on garde seulement une priorité)
             
             if self.ml_model is not None:
