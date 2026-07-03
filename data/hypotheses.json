@@ -1,0 +1,42 @@
+{
+  "H1": {
+    "titre": "La collaboration ameliore la performance",
+    "metrique": "Collaboratif vs individuel",
+    "valeur": "0.765 vs 0.696",
+    "gain_pct": 9.8,
+    "p_value": 2.4064345822887435e-07,
+    "cohens_d": 1.115,
+    "valide": true
+  },
+  "H2": {
+    "titre": "Le tuteur ameliore la performance",
+    "metrique": "S2 vs S1",
+    "valeur": "0.877 vs 0.765",
+    "gain_pct": 14.7,
+    "p_value": 5.630187570013321e-21,
+    "cohens_d": 2.593,
+    "valide": true
+  },
+  "H3": {
+    "titre": "Le groupement intelligent ameliore la performance",
+    "metrique": "S3 vs S1 (sans tuteur)",
+    "valeur": "0.772 vs 0.765",
+    "gain_pct": 1.0,
+    "p_value": 0.48617949810311006,
+    "cohens_d": 0.14,
+    "valide": false
+  },
+  "H4": {
+    "titre": "Utiliser l'IA pour detecter les apprenants en difficulte",
+    "metrique": "Accuracy / F1 / Recall",
+    "accuracy": 0.91,
+    "f1": 0.735,
+    "recall": 0.962,
+    "valide": true
+  },
+  "ANOVA": {
+    "F": 267.89,
+    "p_value": 4.544260392695122e-69,
+    "significatif": true
+  }
+}
